@@ -107,14 +107,60 @@ class model4ft():
 
 
 
-a = model4ft('2018-10-31')
+a = model4ft('2018-07-05')
 a.analyze()
 
 
 
 
-def trend(ftcode)
-    df = pd.DataFrame(columns=['code',]
+def trend(code, date):
+    end_date = datechange(date, 10)
+    data = q.get_history_kline(code, start=date, end=end_date, ktype=ft.KLType.K_DAY, autype=ft.AuType.QFQ)[1]
+    data = data.iloc[data[data['time_key'].isin([date+ ' 00:00:00'])].index.values[0]:].drop([0]).reset_index(drop=True)
+    last_close = data.iloc[0]['last_close']
+    # N1
+    n1close = data.iloc[0]['close']
+    n1close_rate = n1close / last_close * 100 - 100
+    n1low = data.iloc[0]['low']
+    n1low_rate = n1low / last_close * 100 - 100
+    n1high = data.iloc[0]['high']
+    n1high_rate = n1high / last_close * 100 - 100
+    # N2
+    n2close = data.iloc[1]['close']
+    n2close_rate = n2close / last_close * 100 - 100
+    n2low = data['low'].iloc[:2].min()
+    n2low_rate = n2low / last_close * 100 - 100
+    n2high = data['high'].iloc[:2].max()
+    n2high_rate = n2high / last_close * 100 - 100
+    # N3
+    n3close = data.iloc[2]['close']
+    n3close_rate = n3close / last_close * 100 - 100
+    n3low = data['close'].iloc[:3].min()
+    n3low_rate = n3low / last_close * 100 - 100
+    n3high = data['close'].iloc[:3].max()
+    n3high_rate = n3high / last_close * 100 - 100
+    df.loc[len(df)] = [code, n1close_rate, n2close_rate, n3close_rate, n1low_rate, n2low_rate, n3low_rate, n1high_rate, n2high_rate, n3high_rate]
+    #return data
+
+
+
+ttt = trend('SH.600123', '2018-10-17')
+
+
+for i in a.df['code']:
+    trend(i, '2018-10-17')
+
+'2018-10-17'
+
+
+
+df = pd.DataFrame(columns=['code', 'N1_close%', 'N2_close%', 'N3_close%', 'N1_low%', 'N2_low%',' N3_low%', 'N1_high%', 'N2_high%', 'N3_high%'])
+                      
+for i in a.df['code']:
+    try:
+        trend(i, a.date)
+    except:
+        print(i)
 
 
 
