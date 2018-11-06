@@ -158,6 +158,7 @@ for i in a.df['code']:
     
     
 def get_trend():
+    global df
     df = pd.DataFrame(columns=['code', 'N1_close%', 'N2_close%', 'N3_close%', 'N1_low%', 'N2_low%',' N3_low%', 'N1_high%', 'N2_high%', 'N3_high%'])
     for i in a.df['code']:
         try:
