@@ -155,12 +155,15 @@ for i in a.df['code']:
 
 
 df = pd.DataFrame(columns=['code', 'N1_close%', 'N2_close%', 'N3_close%', 'N1_low%', 'N2_low%',' N3_low%', 'N1_high%', 'N2_high%', 'N3_high%'])
-                      
-for i in a.df['code']:
-    try:
-        trend(i, a.date)
-    except:
-        print(i)
+         
+    
+    
+def get_trend():
+    for i in a.df['code']:
+        try:
+            trend(i, a.date)
+        except:
+            print(i)
 
 
 
