@@ -12,12 +12,28 @@ pd.options.mode.chained_assignment = None
 
 from datetime import datetime, timedelta
 
+q = ft.OpenQuoteContext(host='sz.omg.tf', port=11111)
+
+#hs['code'] = hs['code'].map(lambda x: x[3:])
+# 富途牛牛Code
+# 沪深A股
+hs = q.get_plate_stock('SH.3000005')[1]
+ftid = hs.set_index('code').drop(columns=['stock_owner','stock_name', 'lot_size', 'stock_child_type', 'stock_type', 'list_time']).T.to_dict('records')[0]
+
+
+
+
 def datechange(date, change):
     d = datetime.strptime(date,'%Y-%m-%d').date()
     new_d = d + timedelta(days=change)
     new_date = new_d.strftime('%Y-%m-%d')
     return new_date
 
+
+def trading_day(date):
+    startdate = datechange(date, -5)
+    tradingdate = q.get_trading_days('SH', start=startdate, end=date)[1][-1]
+    return tradingdate
 
 
 def Qdata(ftcode, date, future=False):
@@ -58,17 +74,36 @@ def mod2(data):
 
 
 
+
+
+
+def mod4(data):
+    d1ma5 = data.iloc[-1]['ma5']
+    d2ma5 = data.iloc[-2]['ma5']
+    d3ma5 = data.iloc[-3]['ma5']
+    d1ma20 = data.iloc[-1]['ma20']
+    d2ma15 = data.iloc[-2]['ma15']
+    d3ma10 = data.iloc[-3]['ma10']
+    if d1ma5 > d1ma20 and d2ma5 > d2ma15 and d3ma5 > d3ma10: 
+        result = True
+    return result
+
+
+
+
+
+
+
+
 df = pd.DataFrame(columns=['code', 'date']
 
-                  
-               
-       
+
 
 
 
 class model4ft():
     def __init__(self, date, day=8):
-        self.date = date
+        self.date = trading_day(date)
         self.day = day
         self.df = pd.DataFrame(columns=['code', 'date'])
     def model4(self, code, select_date):
@@ -95,6 +130,44 @@ class model4ft():
 
 
 
-a = model4ft('2016-10-10')
+a = model4ft('2018-12-12')
 a.analyze()
 
+
+                  
+                  
+
+class model5ft():
+    def __init__(self, date, day=8):
+        self.date = trading_day(date)
+        self.day = day
+        self.df = pd.DataFrame(columns=['code', 'date'])
+    def model4(self, code, select_date):
+        start_date = datechange(select_date, -45)
+        data = Qdata(code, select_date)
+        d0 = data.iloc[-1]['time_key'].split(' ')[0]
+        if mod4(data):
+            self.df.loc[len(self.df)] = [code, d0]
+        else:
+            pass
+    def analyze_model4(self, code, date):
+        #print(code)
+        r = self.model4(code, date)
+    def analyze(self):
+        futures = []
+        with ThreadPoolExecutor(max_workers=200) as executor:
+            for i in ftid:
+                futures.append(executor.submit(self.analyze_model4, i, self.date))
+            kwargs = {'total': len(futures)}
+            for f in tqdm(as_completed(futures), **kwargs):
+                pass
+    def result(self):
+        print(self.df.to_string)
+
+
+
+a = model5ft('2019-01-02')
+a.analyze()
+
+                  
+                  
