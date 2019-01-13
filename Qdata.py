@@ -22,40 +22,48 @@ ftid = hs.set_index('code').drop(columns=['stock_owner','stock_name', 'lot_size'
 
 
 
+def datechange(date, change):
+    d = datetime.strptime(date,'%Y-%m-%d').date()
+    new_d = d + timedelta(days=change)
+    new_date = new_d.strftime('%Y-%m-%d')
+    return new_date
 
 
-
-def trading_dayb(date, change=0):
+def trading_day(date, change=0):
     startdate = datechange(date, -50)
     tradingdatelist = q.get_trading_days('SH', start=startdate, end=date)[1]
     tradingdate = tradingdatelist[-1-change]
     return tradingdate
 
 
-def Qdatab(ftcode, date, future=False):
-    start_date = trading_day(date, change=30)
+def Qdata(ftcode, date, day=15, future=False):
+    change = day + 19
+    start_date = trading_day(date, change=change)
     end_date = trading_day(date)
     data = q.get_history_kline(ftcode, start=start_date, end=end_date, ktype=ft.KLType.K_DAY, autype=ft.AuType.QFQ)[1]
+    if len(data) != change:
+        print(1)
+        start_date = datechange(date, -300)
+        data = q.get_history_kline(ftcode, start=start_date, end=end_date, ktype=ft.KLType.K_DAY, autype=ft.AuType.QFQ)[1][-change:]
     data['ma5'] = data['close'].rolling(5).mean()
     data['ma10'] = data['close'].rolling(10).mean()
     data['ma15'] = data['close'].rolling(15).mean()
     data['ma20'] = data['close'].rolling(20).mean()
+    data = data[-day:]
     return data
 
 
 
-def mod1b(data, before=8, after=0):
-    result = False
+def mod1(data, before=8, after=0):
+    result = True
     for d in range(after, before):
         i = - (d + 1)
         ma5 = data.iloc[i]['ma5']
         ma10 = data.iloc[i]['ma10']
         ma15 = data.iloc[i]['ma15']
         ma20 = data.iloc[i]['ma20']
-        if ma5 < ma10 < ma20:
-            if d + 1 == day:
-                result = True
-        else:
+        if not ma5 < ma10 < ma20:
+            result = False
             break
     return result
 
@@ -78,7 +86,7 @@ def trading_day(date):
 
 
 def Qdata(ftcode, date, future=False):
-    start_date = datechange(date, -55)
+    start_date = datechange(date, -100)
     data = q.get_history_kline(ftcode, start=start_date, end=date, ktype=ft.KLType.K_DAY, autype=ft.AuType.QFQ)[1]
     data['ma5'] = data['close'].rolling(5).mean()
     data['ma10'] = data['close'].rolling(10).mean()
@@ -88,20 +96,6 @@ def Qdata(ftcode, date, future=False):
 
 
 
-def mod1(data, day=8):
-    result = False
-    for d in range(day):
-        i = - (d + 1)
-        ma5 = data.iloc[i]['ma5']
-        ma10 = data.iloc[i]['ma10']
-        ma15 = data.iloc[i]['ma15']
-        ma20 = data.iloc[i]['ma20']
-        if ma5 < ma10 < ma20:
-            if d + 1 == day:
-                result = True
-        else:
-            break
-    return result
 
 
 def mod2(data):
